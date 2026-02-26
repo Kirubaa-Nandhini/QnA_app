@@ -1,0 +1,95 @@
+{% extends "questions/base.html" %}
+{% block title %}Questions — QnA App{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-white">Questions</h1>
+        <p class="text-gray-400 mt-1">Browse and explore community questions</p>
+    </div>
+    <a href="{% url 'questions:create' %}"
+        class="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-lg shadow-indigo-500/20">
+        + Ask a Question
+    </a>
+</div>
+
+{% if questions %}
+<div class="grid gap-4">
+    {% for question in questions %}
+    <article class="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-indigo-500/40 transition group">
+        <!-- Question type + difficulty badges -->
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full
+        {% if question.question_type == 'multiple_choice' %}bg-blue-900/60 text-blue-300
+        {% elif question.question_type == 'true_false' %}bg-purple-900/60 text-purple-300
+        {% else %}bg-teal-900/60 text-teal-300{% endif %}">
+                {{ question.get_question_type_display }}
+            </span>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full
+        {% if question.difficulty == 'easy' %}bg-green-900/60 text-green-300
+        {% elif question.difficulty == 'medium' %}bg-yellow-900/60 text-yellow-300
+        {% else %}bg-red-900/60 text-red-300{% endif %}">
+                {{ question.get_difficulty_display }}
+            </span>
+        </div>
+
+        <!-- Question text -->
+        <a href="{% url 'questions:detail' question.pk %}"
+            class="block text-lg font-semibold text-gray-100 group-hover:text-indigo-400 transition leading-snug mb-3">
+            {{ question.text }}
+        </a>
+
+        <!-- Tags -->
+        {% if question.tags %}
+        <div class="flex flex-wrap gap-1.5 mb-4">
+            {% for tag in question.tag_list %}<span
+                class="text-xs bg-gray-800 text-gray-400 border border-gray-700 px-2.5 py-0.5 rounded-full">
+                #{{ tag}}</span>{% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Views and Likes badges -->
+        <div class="flex items-center gap-4 text-sm text-gray-500">
+            <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                {{ question.views }} views
+            </span>
+            <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-rose-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42
+            4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3
+            16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55
+            11.54L12 21.35z" />
+                </svg>
+                {{ question.likes }} likes
+            </span>
+            <span class="ml-auto text-xs text-gray-600">{{ question.created_at|date:"M d, Y" }}</span>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+
+{% else %}
+<!-- Empty state -->
+<div class="text-center py-24">
+    <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3
+           0 1.4-.9 2.6-2.25 3.15l-.5.2C12.45 13.75 12 14.4 12
+           15m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    </div>
+    <h2 class="text-xl font-semibold text-gray-400 mb-2">No questions yet</h2>
+    <p class="text-gray-600 mb-6">Be the first to ask something!</p>
+    <a href="{% url 'questions:create' %}"
+        class="inline-block bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-6 py-3 rounded-xl transition">
+        Ask the first question
+    </a>
+</div>
+{% endif %}
+{% endblock %}

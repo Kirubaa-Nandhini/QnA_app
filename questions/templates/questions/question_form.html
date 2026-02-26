@@ -1,0 +1,91 @@
+{% extends "questions/base.html" %}
+{% block title %}{{ form_title }} — QnA App{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm text-gray-500">
+        <a href="{% url 'questions:list' %}" class="hover:text-indigo-400 transition">Questions</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-400">{{ form_title }}</span>
+    </nav>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8">
+        <h1 class="text-2xl font-bold text-white mb-1">{{ form_title }}</h1>
+        <p class="text-gray-500 text-sm mb-8">Fill in the details below to {{ submit_label|lower }}.</p>
+
+        <form method="POST" novalidate>
+            {% csrf_token %}
+            <div class="space-y-6">
+
+                {% for field in form %}
+                <div id="div_{{ field.id_for_label }}" {% if field.name in 'choice1,choice2,choice3' %}
+                    class="choice-field" {% endif %}>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-300 mb-1.5">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="text-rose-400 ml-0.5">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <p class="mt-1.5 text-xs text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <p class="mt-1.5 text-xs text-rose-400 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2
+                   0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1
+                   1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="submit" id="submit-question-form"
+                        class="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold px-6 py-2.5 rounded-xl transition shadow-lg shadow-indigo-500/20">
+                        {{ submit_label }}
+                    </button>
+                    <a href="{% url 'questions:list' %}"
+                        class="text-gray-500 hover:text-gray-300 text-sm transition px-3 py-2.5">
+                        Cancel
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('id_question_type');
+        const choiceFields = document.querySelectorAll('.choice-field');
+
+        function toggleChoices() {
+            const isMultipleChoice = typeSelect && typeSelect.value === 'multiple_choice';
+            choiceFields.forEach(field => {
+                if (isMultipleChoice) {
+                    field.classList.remove('hidden');
+                } else {
+                    field.classList.add('hidden');
+                }
+            });
+        }
+
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleChoices);
+            toggleChoices(); // Initial state
+        }
+    });
+</script>
+{% endblock %}
