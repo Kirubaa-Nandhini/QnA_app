@@ -2,9 +2,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import F
+from django.db import transaction
 
-from .models import Question
-from .forms import QuestionForm
+from .models import Question, Choice
+from .forms import QuestionForm, ChoiceFormSet
 
 
 class QuestionListView(ListView):
@@ -41,9 +42,29 @@ class QuestionCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        if self.request.POST:
+            ctx['choices'] = ChoiceFormSet(self.request.POST)
+        else:
+            ctx['choices'] = ChoiceFormSet()
         ctx['form_title'] = 'Ask a New Question'
         ctx['submit_label'] = 'Create Question'
         return ctx
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        choices = context['choices']
+        with transaction.atomic():
+            self.object = form.save()
+            if choices.is_valid():
+                choices.instance = self.object
+                choices.save()
+            
+            # Handle True/False auto-population if it's empty
+            if self.object.question_type == 'true_false' and not self.object.choices.exists():
+                Choice.objects.create(question=self.object, text='True', is_correct=False)
+                Choice.objects.create(question=self.object, text='False', is_correct=False)
+                
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('questions:detail', kwargs={'pk': self.object.pk})
@@ -56,9 +77,23 @@ class QuestionUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        if self.request.POST:
+            ctx['choices'] = ChoiceFormSet(self.request.POST, instance=self.object)
+        else:
+            ctx['choices'] = ChoiceFormSet(instance=self.object)
         ctx['form_title'] = 'Edit Question'
         ctx['submit_label'] = 'Save Changes'
         return ctx
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        choices = context['choices']
+        with transaction.atomic():
+            self.object = form.save()
+            if choices.is_valid():
+                choices.instance = self.object
+                choices.save()
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('questions:detail', kwargs={'pk': self.object.pk})

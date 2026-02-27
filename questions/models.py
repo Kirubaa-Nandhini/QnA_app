@@ -32,9 +32,6 @@ class Question(models.Model):
         verbose_name='Tags',
         help_text='Comma-separated keywords, e.g. math, algebra',
     )
-    choice1 = models.CharField(max_length=255, blank=True, default='', verbose_name='Choice 1')
-    choice2 = models.CharField(max_length=255, blank=True, default='', verbose_name='Choice 2')
-    choice3 = models.CharField(max_length=255, blank=True, default='', verbose_name='Choice 3')
     views = models.PositiveIntegerField(default=0, verbose_name='Views')
     likes = models.PositiveIntegerField(default=0, verbose_name='Likes')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -51,3 +48,17 @@ class Question(models.Model):
     def tag_list(self):
         """Return tags as a cleaned list."""
         return [t.strip() for t in self.tags.split(',') if t.strip()]
+
+
+class Choice(models.Model):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name='choices',
+        verbose_name='Question'
+    )
+    text = models.CharField(max_length=255, verbose_name='Choice Text')
+    is_correct = models.BooleanField(default=False, verbose_name='Is Correct?')
+
+    def __str__(self):
+        return f"{self.question.text[:20]} - {self.text}"

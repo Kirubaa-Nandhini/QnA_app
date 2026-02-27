@@ -76,22 +76,19 @@
             </div>
         </div>
 
-        {% if question.question_type == 'multiple_choice' %}
-        <div class="mt-4 space-y-3 mb-8">
-            <div class="flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
-                <span
-                    class="w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">A</span>
-                <span class="text-gray-200">{{ question.choice1 }}</span>
-            </div>
-            <div class="flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
-                <span
-                    class="w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">B</span>
-                <span class="text-gray-200">{{ question.choice2 }}</span>
-            </div>
-            <div class="flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
-                <span
-                    class="w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">C</span>
-                <span class="text-gray-200">{{ question.choice3 }}</span>
+        {% if question.question_type == 'multiple_choice' or question.question_type == 'true_false' %}
+        <div class="mt-4 mb-8">
+            <div class="space-y-3">
+                {% for choice in question.choices.all %}
+                <div
+                    class="flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 transition-colors duration-300">
+                    <span
+                        class="w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">
+                        {{ forloop.counter }}
+                    </span>
+                    <span class="text-gray-200">{{ choice.text }}</span>
+                </div>
+                {% endfor %}
             </div>
         </div>
         {% endif %}
@@ -100,8 +97,8 @@
         {% if question.tags %}
         <div class="flex flex-wrap gap-2 mb-6">
             {% for tag in question.tag_list %}<span
-                class="text-sm bg-gray-800 text-indigo-300 border border-indigo-500/20 px-3 py-1 rounded-full">#{{ tag
-                }}</span>{% endfor %}
+                class="text-sm bg-gray-800 text-indigo-300 border border-indigo-500/20 px-3 py-1 rounded-full">#{{tag}}</span>
+            {% endfor %}
         </div>
         {% endif %}
 
