@@ -23,6 +23,7 @@ class QuestionForm(forms.ModelForm):
         }
 
 
+<<<<<<< HEAD
 class ChoiceForm(forms.ModelForm):
     class Meta:
         model = Choice
@@ -39,3 +40,37 @@ ChoiceFormSet = forms.inlineformset_factory(
     extra=1,
     can_delete=True
 )
+=======
+from .models import Answer, Comment
+
+class AnswerForm(forms.ModelForm):
+    class Meta:
+        model = Answer
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': _input_cls,
+                'rows': 4,
+                'placeholder': 'Write your answer here...'
+            }),
+        }
+        labels = {
+            'text': 'Your Answer',
+        }
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': _input_cls,
+                'rows': 3,
+                'placeholder': 'Add a comment...'
+            }),
+        }
+        labels = {
+            'text': 'Comment',
+        }
+>>>>>>> 1c60386 (feat: implement Answer Management module with CRUD)

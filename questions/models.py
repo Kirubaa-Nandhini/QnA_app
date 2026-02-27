@@ -50,6 +50,7 @@ class Question(models.Model):
         return [t.strip() for t in self.tags.split(',') if t.strip()]
 
 
+<<<<<<< HEAD
 class Choice(models.Model):
     question = models.ForeignKey(
         Question,
@@ -62,3 +63,43 @@ class Choice(models.Model):
 
     def __str__(self):
         return f"{self.question.text[:20]} - {self.text}"
+=======
+class Answer(models.Model):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name='answers',
+        verbose_name='Question'
+    )
+    text = models.TextField(verbose_name='Answer Text')
+    votes = models.IntegerField(default=0, verbose_name='Votes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-votes', '-created_at']
+        verbose_name = 'Answer'
+        verbose_name_plural = 'Answers'
+
+    def __str__(self):
+        return f"Answer to: {self.question.text[:40]}..."
+
+
+class Comment(models.Model):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Question'
+    )
+    text = models.TextField(verbose_name='Comment Text')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
+
+    def __str__(self):
+        return f"Comment on: {self.question.text[:40]}..."
+>>>>>>> 1c60386 (feat: implement Answer Management module with CRUD)
