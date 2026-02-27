@@ -1,0 +1,46 @@
+{% extends "questions/base.html" %}
+
+{% block title %}Edit Profile — QnA App{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12">
+    <div class="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Edit Profile</h1>
+            <p class="text-gray-400">Update your account information</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="space-y-6">
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-300 mb-2">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="mt-2 space-y-1">
+                        {% for error in field.errors %}
+                        <p class="text-xs text-rose-400 font-medium">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="flex items-center gap-4 pt-4">
+                    <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-3 rounded-xl transition shadow-lg shadow-indigo-500/20">
+                        Save Changes
+                    </button>
+                    <a href="{% url 'users:profile' %}"
+                        class="text-gray-400 hover:text-white font-semibold transition py-3">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

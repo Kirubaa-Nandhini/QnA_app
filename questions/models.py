@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Question(models.Model):
@@ -14,6 +15,7 @@ class Question(models.Model):
         ('hard', 'Hard'),
     ]
 
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
     text = models.TextField(verbose_name='Question Text')
     question_type = models.CharField(
         max_length=20,
@@ -75,6 +77,7 @@ class Answer(models.Model):
         related_name='answers',
         verbose_name='Question'
     )
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='answers')
     text = models.TextField(verbose_name='Answer Text')
     upvotes = models.PositiveIntegerField(default=0, verbose_name='Upvotes')
     downvotes = models.PositiveIntegerField(default=0, verbose_name='Downvotes')
@@ -98,6 +101,7 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Question'
     )
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='comments')
     text = models.TextField(verbose_name='Comment Text')
     created_at = models.DateTimeField(auto_now_add=True)
 
