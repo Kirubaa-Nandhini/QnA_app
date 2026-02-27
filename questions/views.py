@@ -4,6 +4,8 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import F
 from django.db import transaction
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
 from .models import Question, Choice, Answer, Comment
 from .forms import QuestionForm, ChoiceFormSet
@@ -44,7 +46,7 @@ class QuestionDetailView(DetailView):
         return obj
 
 
-class QuestionCreateView(CreateView):
+class QuestionCreateView(LoginRequiredMixin, CreateView):
     model = Question
     form_class = QuestionForm
     template_name = 'questions/question_form.html'
@@ -63,6 +65,7 @@ class QuestionCreateView(CreateView):
         context = self.get_context_data()
         choices = context['choices']
         with transaction.atomic():
+            form.instance.author = self.request.user
             self.object = form.save()
             if choices.is_valid():
                 choices.instance = self.object
@@ -79,7 +82,7 @@ class QuestionCreateView(CreateView):
         return reverse('questions:detail', kwargs={'pk': self.object.pk})
 
 
-class QuestionUpdateView(UpdateView):
+class QuestionUpdateView(LoginRequiredMixin, UpdateView):
     model = Question
     form_class = QuestionForm
     template_name = 'questions/question_form.html'
@@ -108,13 +111,14 @@ class QuestionUpdateView(UpdateView):
         return reverse('questions:detail', kwargs={'pk': self.object.pk})
 
 
-class QuestionDeleteView(DeleteView):
+class QuestionDeleteView(LoginRequiredMixin, DeleteView):
     model = Question
     template_name = 'questions/question_confirm_delete.html'
     context_object_name = 'question'
     success_url = reverse_lazy('questions:list')
 
 
+@login_required
 def like_question(request, pk):
     """Toggle likes counter using sessions (POST only)."""
     if request.method == 'POST':
@@ -135,6 +139,7 @@ def like_question(request, pk):
     return redirect(reverse('questions:detail', kwargs={'pk': pk}))
 
 
+@login_required
 def create_answer(request, pk):
     """Handle answer submission for a specific question."""
     question = get_object_or_404(Question, pk=pk)
@@ -143,10 +148,12 @@ def create_answer(request, pk):
         if form.is_valid():
             answer = form.save(commit=False)
             answer.question = question
+            answer.author = request.user
             answer.save()
     return redirect(reverse('questions:detail', kwargs={'pk': pk}))
 
 
+@login_required
 def create_comment(request, pk):
     """Handle comment submission for a specific question."""
     question = get_object_or_404(Question, pk=pk)
@@ -155,10 +162,12 @@ def create_comment(request, pk):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.question = question
+            comment.author = request.user
             comment.save()
     return redirect(reverse('questions:detail', kwargs={'pk': pk}))
 
 
+@login_required
 def upvote_answer(request, pk):
     """Increment answer upvotes via AJAX."""
     if request.method == 'POST':
@@ -175,6 +184,7 @@ def upvote_answer(request, pk):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+@login_required
 def downvote_answer(request, pk):
     """Increment answer downvotes via AJAX."""
     if request.method == 'POST':
@@ -191,7 +201,7 @@ def downvote_answer(request, pk):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-class AnswerUpdateView(UpdateView):
+class AnswerUpdateView(LoginRequiredMixin, UpdateView):
     model = Answer
     form_class = AnswerForm
     template_name = 'questions/answer_form.html'
@@ -206,7 +216,7 @@ class AnswerUpdateView(UpdateView):
         return reverse('questions:detail', kwargs={'pk': self.object.question.pk})
 
 
-class AnswerDeleteView(DeleteView):
+class AnswerDeleteView(LoginRequiredMixin, DeleteView):
     model = Answer
     template_name = 'questions/answer_confirm_delete.html'
     context_object_name = 'answer'

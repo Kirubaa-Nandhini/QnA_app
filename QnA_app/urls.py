@@ -8,5 +8,6 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('questions/', include('questions.urls', namespace='questions')),
+    path('users/', include('users.urls', namespace='users')),
     path('', RedirectView.as_view(url='/questions/', permanent=False)),
 ]
