@@ -3,52 +3,38 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
-
-    <!-- Breadcrumb -->
     <nav class="mb-6 text-sm text-gray-500">
-        <a href="{% url 'questions:list' %}" class="hover:text-indigo-400 transition">Questions</a>
+        <a href="{% url 'questions:list' %}" class="hover:text-indigo-400">Questions</a>
         <span class="mx-2">/</span>
         <span class="text-gray-400">{{ form_title }}</span>
     </nav>
 
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8">
         <h1 class="text-2xl font-bold text-white mb-1">{{ form_title }}</h1>
-        <p class="text-gray-500 text-sm mb-8">Fill in the details below to {{ submit_label|lower }}.</p>
+        <p class="text-gray-500 text-sm mb-8">Fill in the details below.</p>
 
         <form method="POST" novalidate id="question-form">
             {% csrf_token %}
             <div class="space-y-6">
-
                 <!-- Question Text -->
-                <div id="div_{{ form.text.id_for_label }}">
-                    <label for="{{ form.text.id_for_label }}" class="block text-sm font-semibold text-gray-300 mb-1.5">
-                        {{ form.text.label }}
-                        {% if form.text.field.required %}<span class="text-rose-400 ml-0.5">*</span>{% endif %}
-                    </label>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5">Question</label>
                     {{ form.text }}
-                    {% for error in form.text.errors %}
-                    <p class="mt-1.5 text-xs text-rose-400 flex items-center gap-1">
-                        {{ error }}
-                    </p>
-                    {% endfor %}
                 </div>
 
                 <!-- Question Type -->
-                <div id="div_{{ form.question_type.id_for_label }}">
-                    <label for="{{ form.question_type.id_for_label }}"
-                        class="block text-sm font-semibold text-gray-300 mb-1.5">
-                        {{ form.question_type.label }}
-                        {% if form.question_type.field.required %}<span class="text-rose-400 ml-0.5">*</span>{% endif %}
-                    </label>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5">Type</label>
                     {{ form.question_type }}
-                    {% for error in form.question_type.errors %}
-                    <p class="mt-1.5 text-xs text-rose-400 flex items-center gap-1">
-                        {{ error }}
-                    </p>
-                    {% endfor %}
                 </div>
 
-                <!-- Choices Formset Section (Moved here, after Type) -->
+                <!-- Correct Answer (Short Answer Only) -->
+                <div id="correct-answer-section" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5">Correct Answer</label>
+                    {{ form.correct_answer }}
+                </div>
+
+                <!-- Choices -->
                 <div id="choices-section" class="pt-4 border-t border-gray-800 hidden">
                     <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Choices</h3>
                     {{ choices.management_form }}
@@ -56,19 +42,14 @@
                         {% for choice_form in choices %}
                         <div
                             class="choice-form-row items-center gap-3 bg-gray-800/30 p-3 rounded-xl border border-gray-700/50 flex">
-                            {% for hidden in choice_form.hidden_fields %}
-                            {{ hidden }}
-                            {% endfor %}
-                            <div class="flex-grow">
-                                {{ choice_form.text }}
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            {% for hidden in choice_form.hidden_fields %}{{ hidden }}{% endfor %}
+                            <div class="flex-grow">{{ choice_form.text }}</div>
+                            <div class="flex items-center gap-2">
                                 <label class="text-[10px] text-gray-500 uppercase font-bold">Correct?</label>
                                 {{ choice_form.is_correct }}
                             </div>
                             {% if choices.can_delete %}
-                            <div class="flex items-center shrink-0 delete-wrapper">
-                                <label class="text-[10px] text-gray-500 uppercase font-bold mr-1">Delete</label>
+                            <div class="delete-wrapper">
                                 {{ choice_form.DELETE }}
                             </div>
                             {% endif %}
@@ -76,60 +57,34 @@
                         {% endfor %}
                     </div>
                     <button type="button" id="add-choice-btn"
-                        class="mt-4 text-brand hover:text-brand/80 text-xs font-bold transition flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Another Choice
+                        class="mt-4 text-brand text-xs font-bold transition flex items-center gap-1">
+                        + Add Choice
                     </button>
-                    <p id="tf-note" class="hidden text-xs text-gray-400 mt-2 font-medium">Please mark which answer is
-                        correct.</p>
                 </div>
 
                 <!-- Difficulty -->
-                <div id="div_{{ form.difficulty.id_for_label }}">
-                    <label for="{{ form.difficulty.id_for_label }}"
-                        class="block text-sm font-semibold text-gray-300 mb-1.5">
-                        {{ form.difficulty.label }}
-                        {% if form.difficulty.field.required %}<span class="text-rose-400 ml-0.5">*</span>{% endif %}
-                    </label>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5">Difficulty</label>
                     {{ form.difficulty }}
-                    {% for error in form.difficulty.errors %}
-                    <p class="mt-1.5 text-xs text-rose-400">{{ error }}</p>
-                    {% endfor %}
                 </div>
 
                 <!-- Tags -->
-                <div id="div_{{ form.tags.id_for_label }}">
-                    <label for="{{ form.tags.id_for_label }}" class="block text-sm font-semibold text-gray-300 mb-1.5">
-                        {{ form.tags.label }}
-                        {% if form.tags.field.required %}<span class="text-rose-400 ml-0.5">*</span>{% endif %}
-                    </label>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5">Tags</label>
                     {{ form.tags }}
-                    {% if form.tags.help_text %}
-                    <p class="mt-1.5 text-xs text-gray-500 italic">{{ form.tags.help_text }}</p>
-                    {% endif %}
-                    {% for error in form.tags.errors %}
-                    <p class="mt-1.5 text-xs text-rose-400">{{ error }}</p>
-                    {% endfor %}
                 </div>
 
                 <div class="flex items-center gap-3 pt-6 border-t border-gray-800">
-                    <button type="submit" id="submit-question-form"
-                        class="bg-brand text-white font-bold px-8 py-3 rounded-xl hover:bg-brand/90 transition shadow-lg shadow-indigo-500/10">
+                    <button type="submit"
+                        class="bg-brand text-white font-bold px-8 py-3 rounded-xl hover:bg-brand/90 transition shadow-lg">
                         {{ submit_label }}
                     </button>
                     <a href="{% url 'questions:list' %}"
-                        class="text-gray-500 hover:text-gray-300 text-sm font-medium transition px-4 py-2 hover:bg-gray-800 rounded-xl">
-                        Cancel
-                    </a>
+                        class="text-gray-500 hover:text-gray-300 text-sm font-medium">Cancel</a>
                 </div>
-
             </div>
         </form>
     </div>
-
 </div>
 
 <style>
@@ -145,52 +100,37 @@
         const addChoiceBtn = document.getElementById('add-choice-btn');
         const choicesContainer = document.getElementById('choices-container');
         const totalForms = document.getElementById('id_choices-TOTAL_FORMS');
-        const tfNote = document.getElementById('tf-note');
 
         function toggleChoices() {
             const type = typeSelect ? typeSelect.value : '';
+            const correctAnsSection = document.getElementById('correct-answer-section');
             if (type === 'multiple_choice') {
                 choicesSection.classList.remove('hidden');
                 addChoiceBtn.classList.remove('hidden');
-                tfNote.classList.add('hidden');
-
-                // Show delete buttons for MCQ
+                correctAnsSection.classList.add('hidden');
                 document.querySelectorAll('.delete-wrapper').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('.choice-form-row input[type="text"]').forEach(el => el.readOnly = false);
             } else if (type === 'true_false') {
                 choicesSection.classList.remove('hidden');
                 addChoiceBtn.classList.add('hidden');
-                tfNote.classList.remove('hidden');
-
-                // Ensure exactly 2 rows for T/F
+                correctAnsSection.classList.add('hidden');
                 ensureTwoRowsForTF();
-
-                // Hide delete buttons for T/F and make True/False read-only labels
                 document.querySelectorAll('.delete-wrapper').forEach(el => el.classList.add('hidden'));
                 const rows = document.querySelectorAll('.choice-form-row');
-                if (rows.length >= 1) {
-                    const input1 = rows[0].querySelector('input[type="text"]');
-                    input1.value = 'True';
-                    input1.readOnly = true;
-                }
-                if (rows.length >= 2) {
-                    const input2 = rows[1].querySelector('input[type="text"]');
-                    input2.value = 'False';
-                    input2.readOnly = true;
-                }
+                if (rows.length >= 1) { const input = rows[0].querySelector('input[type="text"]'); input.value = 'True'; input.readOnly = true; }
+                if (rows.length >= 2) { const input = rows[1].querySelector('input[type="text"]'); input.value = 'False'; input.readOnly = true; }
+            } else if (type === 'short_answer') {
+                choicesSection.classList.add('hidden');
+                correctAnsSection.classList.remove('hidden');
             } else {
                 choicesSection.classList.add('hidden');
+                correctAnsSection.classList.add('hidden');
             }
         }
 
         function ensureTwoRowsForTF() {
             let count = parseInt(totalForms.value);
-            // If less than 2, add
-            while (count < 2) {
-                addChoice();
-                count++;
-            }
-            // If more than 2, technically we could hide others, but usually T/F starts fresh or we handle it here
+            while (count < 2) { addChoice(); count++; }
             const rows = document.querySelectorAll('.choice-form-row');
             rows.forEach((row, index) => {
                 if (index >= 2) row.classList.add('hidden');
@@ -202,41 +142,24 @@
             const currentCount = parseInt(totalForms.value);
             const firstRow = choicesContainer.querySelector('.choice-form-row');
             const newRow = firstRow.cloneNode(true);
-
             newRow.querySelectorAll('input').forEach(input => {
-                const name = input.name.replace(/-[0-9]+-/, `-${currentCount}-`);
-                const id = input.id.replace(/-[0-9]+-/, `-${currentCount}-`);
-                input.name = name;
-                input.id = id;
-                if (input.type === 'checkbox') {
-                    input.checked = false;
-                } else if (input.type === 'text') {
-                    input.value = '';
-                    input.readOnly = false;
-                }
+                input.name = input.name.replace(/-[0-9]+-/, `-${currentCount}-`);
+                input.id = input.id.replace(/-[0-9]+-/, `-${currentCount}-`);
+                if (input.type === 'checkbox') input.checked = false;
+                else if (input.type === 'text') { input.value = ''; input.readOnly = false; }
             });
-
             choicesContainer.appendChild(newRow);
             totalForms.value = currentCount + 1;
-            return newRow;
         }
 
-        if (typeSelect) {
-            typeSelect.addEventListener('change', toggleChoices);
-            toggleChoices();
-        }
-
+        if (typeSelect) { typeSelect.addEventListener('change', toggleChoices); toggleChoices(); }
         addChoiceBtn.addEventListener('click', addChoice);
 
-        // Single Selection Logic for Correct Answer (Radio Behavior)
         document.addEventListener('change', function (e) {
             if (e.target.classList.contains('correct-answer-checkbox')) {
                 if (e.target.checked) {
-                    // Uncheck all other correct-answer-checkboxes
                     document.querySelectorAll('.correct-answer-checkbox').forEach(cb => {
-                        if (cb !== e.target) {
-                            cb.checked = false;
-                        }
+                        if (cb !== e.target) cb.checked = false;
                     });
                 }
             }

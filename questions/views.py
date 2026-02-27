@@ -5,13 +5,10 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.db.models import F
 from django.db import transaction
 
-<<<<<<< HEAD
-from .models import Question, Choice
+from .models import Question, Choice, Answer, Comment
 from .forms import QuestionForm, ChoiceFormSet
-=======
-from .models import Question, Answer, Comment
+from .models import Question
 from .forms import QuestionForm, AnswerForm, CommentForm
->>>>>>> 1c60386 (feat: implement Answer Management module with CRUD)
 
 
 class QuestionListView(ListView):
@@ -163,20 +160,34 @@ def create_comment(request, pk):
 
 
 def upvote_answer(request, pk):
-    """Increment answer votes via AJAX."""
+    """Increment answer upvotes via AJAX."""
     if request.method == 'POST':
-        Answer.objects.filter(pk=pk).update(votes=F('votes') + 1)
+        Answer.objects.filter(pk=pk).update(
+            upvotes=F('upvotes') + 1,
+            votes=F('votes') + 1
+        )
         answer = get_object_or_404(Answer, pk=pk)
-        return JsonResponse({'votes': answer.votes})
+        return JsonResponse({
+            'votes': answer.votes,
+            'upvotes': answer.upvotes,
+            'downvotes': answer.downvotes
+        })
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 def downvote_answer(request, pk):
-    """Decrement answer votes via AJAX."""
+    """Increment answer downvotes via AJAX."""
     if request.method == 'POST':
-        Answer.objects.filter(pk=pk).update(votes=F('votes') - 1)
+        Answer.objects.filter(pk=pk).update(
+            downvotes=F('downvotes') + 1,
+            votes=F('votes') - 1
+        )
         answer = get_object_or_404(Answer, pk=pk)
-        return JsonResponse({'votes': answer.votes})
+        return JsonResponse({
+            'votes': answer.votes,
+            'upvotes': answer.upvotes,
+            'downvotes': answer.downvotes
+        })
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 

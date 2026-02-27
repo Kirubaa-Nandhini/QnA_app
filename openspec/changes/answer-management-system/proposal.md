@@ -1,40 +1,41 @@
 ## Why
 
-The QnA application currently allows users to manage questions but lacks the ability for users to provide answers. A community-driven platform requires a way to answer questions and a peer-review mechanism to highlight high-quality content. An Answer Management system with voting (upvotes and downvotes) is essential for building a functional knowledge-sharing ecosystem.
+The QnA application currently allows users to manage questions but lacks the ability for community members to contribute their own answers or discuss existing questions. To foster a collaborative learning environment, we need a robust Answer Management system that supports peer evaluation and general discussions. Integrating voting (upvotes/downvotes) and commenting capabilities allows the most helpful content to rise to the top while keeping the community engaged.
 
 ## What Changes
 
-- Introduce an `Answer` Django model in the `questions` app with fields:
-  - `question` — ForeignKey linking the answer to a specific `Question`
-  - `text` — the content of the answer
-  - `votes` — integer counter tracking the net score (upvotes minus downvotes)
-  - `created_at` and `updated_at` — auto-managed timestamps
-- Update the Question Detail page to:
-  - List all answers associated with the question
-  - Display the net `votes` count for each answer
-  - Provide a form to submit a new answer to that question
-- Implement voting actions for answers:
-  - "Upvote" button to increment the vote count
-  - "Downvote" button to decrement the vote count
-- Register the `Answer` model with the Django admin interface
-- Add URL routing for answer creation and voting endpoints
-- Ensure answers are styled consistently with the existing Tailwind CSS theme
+- **Introduced Django Models**:
+  - `Answer`: Links to a `Question` and tracks content, **independent upvote/downvote counters**, net score, and timestamps.
+  - `Comment`: Links to a `Question` to allow for general meta-discussion and clarifications.
+- **Interactive Question Detail Workspace**:
+  - **Dynamic MCQ/TF Interaction**: Choices are now interactive—clicking an option provides instant feedback with success/error icons and highlights the correct choice. Interaction is disabled once a choice is made to prevent multiple attempts.
+  - **Automated T/F Handling**: Form logic ensures True/False questions always have exactly two read-only options ("True" and "False") to maintain data integrity.
+  - **Short Answer Reference Reveal**: Implemented a "Show Answer" button that reveals a hidden reference answer for Short Answer questions.
+  - **Conditional Answer Submission**: The "Your Answer" input appears only for **Short Answer** questions, whereas MCQ/TF questions rely on the interactive choice system.
+  - **Dynamic Content Visibility**: Empty-state placeholders for "Answers" and "Comments" hide automatically to keep the UI clean if no content exists.
+- **Seamless Interaction (AJAX + JS)**:
+  - **Individual Vote Tracking**: Upvote and downvote actions are tracked separately and updated in real-time via AJAX Fetch API.
+  - **Full CRUD Lifecycle**: Added support for **Editing** and **Deleting** answers.
+- **Aesthetic Integration**:
+  - All interactive elements use the premium Dark Mode design system with glassmorphic cards and vibrant status indicators.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `answer-management`: Ability to create answers for any existing question and view them on the question's detail page.
-- `answer-voting`: Support for upvoting and downvoting answers to reflect community consensus on answer quality.
-- `answer-admin`: Integration with the Django admin panel for managing user-submitted answers.
+- `interactive-test`: Click-to-reveal feedback for all choice-based questions (MCQ and T/F).
+- `answer-management`: Users can submit long-form answers to Short Answer questions and manage their lifecycle (Edit/Delete).
+- `separate-voting`: Independent tracking of upvotes and downvotes for more transparent community feedback.
+- `short-answer-reference`: Dedicated field in the creation form and reveal UI for authoritative reference answers.
+- `discussion-system`: High-level clarification space for questions separate from the solution space.
 
 ### Modified Capabilities
 
-- `question-detail`: Enhanced the question detail view to include the list of answers and an answer submission form.
+- `question-detail`: Transitioned from a static viewing experience to a fully interactive assessment and discussion workspace.
 
 ## Impact
 
-- **Database**: A new migration will add the `questions_answer` table with a foreign key to the `questions_question` table.
-- **Views**: Question detail view will be updated to include answer context; new views for answer submission and voting will be added.
-- **Templates**: `question_detail.html` will be significantly expanded to render the answer section; new components for answer display and voting buttons.
-- **URLs**: New routes under `questions/` for `answer/<int:pk>/upvote/`, `answer/<int:pk>/downvote/`, and `question/<int:pk>/answer/`.
+- **Database**: Introduced `questions_answer` and `questions_comment` tables. Added `upvotes` and `downvotes` as separate positive integer fields.
+- **Views**: Implemented specialized AJAX handlers for individual up/down increments and context-aware detail views.
+- **Templates**: `question_detail.html` expanded with complex JavaScript for interactive state management and conditional form rendering.
+- **User Flow**: Users can now test their knowledge on choice questions or contribute deep-dive solutions for short-answer prompts.

@@ -78,20 +78,59 @@
 
         {% if question.question_type == 'multiple_choice' or question.question_type == 'true_false' %}
         <div class="mt-4 mb-8">
-            <div class="space-y-3">
+            <div class="space-y-3" id="choices-wrapper">
                 {% for choice in question.choices.all %}
-                <div
-                    class="flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 transition-colors duration-300">
+                <div class="choice-item flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 transition-all duration-300 cursor-pointer hover:bg-gray-800"
+                    data-choice-id="{{ choice.id }}"
+                    data-is-correct="{% if choice.is_correct %}true{% else %}false{% endif %}"
+                    onclick="handleChoiceClick(this)">
                     <span
-                        class="w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">
+                        class="choice-index w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">
                         {{ forloop.counter }}
                     </span>
                     <span class="text-gray-200">{{ choice.text }}</span>
+
+                    <!-- Icons shown on answer reveal/click -->
+                    <div class="ml-auto flex items-center gap-2">
+                        <!-- Success tick -->
+                        <svg class="success-icon w-5 h-5 text-green-500 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <!-- Error cross -->
+                        <svg class="error-icon w-5 h-5 text-red-500 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
+        {% elif question.question_type == 'short_answer' and question.correct_answer %}
+        <!-- Short Answer Reference (Hidden by default) -->
+        <div id="short-answer-display"
+            class="hidden mt-4 mb-8 bg-green-900/10 border border-green-500/20 rounded-2xl p-6">
+            <h4 class="text-xs font-bold text-green-400 uppercase tracking-widest mb-2">Reference Answer</h4>
+            <p class="text-gray-200">{{ question.correct_answer }}</p>
+        </div>
         {% endif %}
+
+        <!-- Show Answer Button -->
+        <div class="mb-8">
+            <button id="show-answer-btn" onclick="revealCorrectAnswer()"
+                class="flex items-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 font-bold px-6 py-2.5 rounded-xl transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Show Answer
+            </button>
+        </div>
 
         <!-- Tags -->
         {% if question.tags %}
@@ -148,14 +187,14 @@
 
 
     <!-- Answers Section -->
+    <!-- Answers Section -->
+    {% if answers %}
     <div class="mt-12">
         <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
             Answers
-            <span class="bg-gray-800 text-gray-400 text-sm px-2.5 py-0.5 rounded-full font-medium">{{ answers.count}}
-            </span>
+            <span
+                class="bg-gray-800 text-gray-400 text-sm px-2.5 py-0.5 rounded-full font-medium">{{answers.count}}</span>
         </h2>
-
-        {% if answers %}
         <div class="space-y-6">
             {% for answer in answers %}
             <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
@@ -177,7 +216,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M14 10h4.708c.834 0 1.518.614 1.574 1.439l.643 9.496c.06.883-.639 1.637-1.523 1.637H11c-1.105 0-2-.895-2-2v-9l6-6 1.414 1.414L14 10zM5 10c-1.105 0-2 .895-2 2v9c0 1.105.895 2 2 2h3V10H5z" />
                                 </svg>
-                                <span id="votes-count-{{ answer.pk }}" class="font-bold">{{ answer.votes }}</span>
+                                <span id="upvotes-count-{{ answer.pk }}" class="font-bold">{{ answer.upvotes }}</span>
                             </button>
                         </form>
 
@@ -191,6 +230,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 14H5.292c-.834 0-1.518-.614-1.574-1.439L3.075 3.065c-.06-.883.639-1.637 1.523-1.637H13c1.105 0 2 .895 2 2v9l-6 6-1.414-1.414L10 14zM19 14c1.105 0 2-.895 2-2V3c0-1.105-.895-2-2-2h-3v13h3z" />
                                 </svg>
+                                <span id="downvotes-count-{{ answer.pk }}" class="font-bold">
+                                    {{answer.downvotes}}</span>
                             </button>
                         </form>
                     </div>
@@ -220,14 +261,11 @@
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <div class="bg-gray-900/30 border border-dashed border-gray-800 rounded-2xl p-12 text-center text-gray-500">
-            <p>No answers yet. Be the first to answer this question!</p>
-        </div>
-        {% endif %}
     </div>
+    {% endif %}
 
     <!-- Post Answer Form -->
+    {% if question.question_type == 'short_answer' %}
     <div class="mt-12 bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-8">
         <h3 class="text-lg font-bold text-white mb-6">Your Answer</h3>
         <form method="POST" action="{% url 'questions:create_answer' question.pk %}">
@@ -243,6 +281,7 @@
             </div>
         </form>
     </div>
+    {% endif %}
 
     <!-- Comments Section -->
     <div class="mt-8 bg-gray-900/50 border border-gray-800 rounded-2xl p-6 mb-16">
@@ -300,6 +339,70 @@
         });
     }
 
+    let answerRevealed = false;
+
+    function handleChoiceClick(element) {
+        if (answerRevealed) return; // Prevent multiple clicks after reveal
+
+        const isCorrect = element.dataset.isCorrect === 'true';
+
+        if (isCorrect) {
+            // Highlight correct choice
+            element.classList.remove('bg-gray-800/50', 'border-gray-700/50');
+            element.classList.add('bg-green-900/20', 'border-green-500/50', 'ring-1', 'ring-green-500/30');
+            element.querySelector('.success-icon').classList.remove('hidden');
+        } else {
+            // Highlight wrong choice
+            element.classList.remove('bg-gray-800/50', 'border-gray-700/50');
+            element.classList.add('bg-red-900/20', 'border-red-500/50', 'ring-1', 'ring-red-500/30');
+            element.querySelector('.error-icon').classList.remove('hidden');
+
+            // Simultaneously reveal the correct one
+            revealCorrectOnly();
+        }
+
+        answerRevealed = true;
+        disableAllChoices();
+    }
+
+    function revealCorrectOnly() {
+        document.querySelectorAll('.choice-item').forEach(item => {
+            if (item.dataset.isCorrect === 'true') {
+                item.classList.remove('bg-gray-800/50', 'border-gray-700/50');
+                item.classList.add('bg-green-900/20', 'border-green-500/50');
+                item.querySelector('.success-icon').classList.remove('hidden');
+            }
+        });
+    }
+
+    function revealCorrectAnswer() {
+        if (answerRevealed) return;
+
+        // Handle MCQ/TF
+        revealCorrectOnly();
+
+        // Handle Short Answer
+        const shortAnsDisplay = document.getElementById('short-answer-display');
+        if (shortAnsDisplay) {
+            shortAnsDisplay.classList.remove('hidden');
+        }
+
+        answerRevealed = true;
+        disableAllChoices();
+
+        // Update button
+        const btn = document.getElementById('show-answer-btn');
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.innerHTML = 'Answer Revealed';
+    }
+
+    function disableAllChoices() {
+        document.querySelectorAll('.choice-item').forEach(item => {
+            item.classList.remove('cursor-pointer', 'hover:bg-gray-800');
+            item.classList.add('cursor-default');
+        });
+    }
+
     // AJAX Voting
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.vote-form').forEach(form => {
@@ -318,17 +421,23 @@
                 })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.votes !== undefined) {
-                            const countSpan = document.getElementById(`votes-count-${answerId}`);
-                            if (countSpan) {
-                                countSpan.textContent = data.votes;
+                        const upSpan = document.getElementById(`upvotes-count-${answerId}`);
+                        const downSpan = document.getElementById(`downvotes-count-${answerId}`);
 
-                                // Simple pop animation
-                                countSpan.classList.add('scale-125', 'text-white');
-                                setTimeout(() => {
-                                    countSpan.classList.remove('scale-125', 'text-white');
-                                }, 200);
-                            }
+                        if (upSpan && data.upvotes !== undefined) {
+                            upSpan.textContent = data.upvotes;
+                        }
+                        if (downSpan && data.downvotes !== undefined) {
+                            downSpan.textContent = data.downvotes;
+                        }
+
+                        // Animation feedback for the clicked button's span
+                        const clickedSpan = this.querySelector('span');
+                        if (clickedSpan) {
+                            clickedSpan.classList.add('scale-125', 'text-white');
+                            setTimeout(() => {
+                                clickedSpan.classList.remove('scale-125', 'text-white');
+                            }, 200);
                         }
                     })
                     .catch(error => console.error('Error:', error));
