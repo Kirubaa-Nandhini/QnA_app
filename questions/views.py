@@ -1,11 +1,14 @@
 from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import F
 from django.db import transaction
 
-from .models import Question, Choice
+from .models import Question, Choice, Answer, Comment
 from .forms import QuestionForm, ChoiceFormSet
+from .models import Question
+from .forms import QuestionForm, AnswerForm, CommentForm
 
 
 class QuestionListView(ListView):
@@ -25,6 +28,12 @@ class QuestionDetailView(DetailView):
         # Check if this question is liked in this session
         liked_questions = self.request.session.get('liked_questions', [])
         context['is_liked'] = self.object.pk in liked_questions
+        
+        # Add answers, comments and forms
+        context['answers'] = self.object.answers.all().order_by('-votes', '-created_at')
+        context['comments'] = self.object.comments.all().order_by('created_at')
+        context['answer_form'] = AnswerForm()
+        context['comment_form'] = CommentForm()
         return context
 
     def get_object(self, queryset=None):
@@ -124,3 +133,83 @@ def like_question(request, pk):
         request.session.modified = True
         
     return redirect(reverse('questions:detail', kwargs={'pk': pk}))
+
+
+def create_answer(request, pk):
+    """Handle answer submission for a specific question."""
+    question = get_object_or_404(Question, pk=pk)
+    if request.method == 'POST':
+        form = AnswerForm(request.POST)
+        if form.is_valid():
+            answer = form.save(commit=False)
+            answer.question = question
+            answer.save()
+    return redirect(reverse('questions:detail', kwargs={'pk': pk}))
+
+
+def create_comment(request, pk):
+    """Handle comment submission for a specific question."""
+    question = get_object_or_404(Question, pk=pk)
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.question = question
+            comment.save()
+    return redirect(reverse('questions:detail', kwargs={'pk': pk}))
+
+
+def upvote_answer(request, pk):
+    """Increment answer upvotes via AJAX."""
+    if request.method == 'POST':
+        Answer.objects.filter(pk=pk).update(
+            upvotes=F('upvotes') + 1,
+            votes=F('votes') + 1
+        )
+        answer = get_object_or_404(Answer, pk=pk)
+        return JsonResponse({
+            'votes': answer.votes,
+            'upvotes': answer.upvotes,
+            'downvotes': answer.downvotes
+        })
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def downvote_answer(request, pk):
+    """Increment answer downvotes via AJAX."""
+    if request.method == 'POST':
+        Answer.objects.filter(pk=pk).update(
+            downvotes=F('downvotes') + 1,
+            votes=F('votes') - 1
+        )
+        answer = get_object_or_404(Answer, pk=pk)
+        return JsonResponse({
+            'votes': answer.votes,
+            'upvotes': answer.upvotes,
+            'downvotes': answer.downvotes
+        })
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+class AnswerUpdateView(UpdateView):
+    model = Answer
+    form_class = AnswerForm
+    template_name = 'questions/answer_form.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form_title'] = 'Edit Answer'
+        ctx['submit_label'] = 'Save Changes'
+        return ctx
+
+    def get_success_url(self):
+        return reverse('questions:detail', kwargs={'pk': self.object.question.pk})
+
+
+class AnswerDeleteView(DeleteView):
+    model = Answer
+    template_name = 'questions/answer_confirm_delete.html'
+    context_object_name = 'answer'
+
+    def get_success_url(self):
+        return reverse('questions:detail', kwargs={'pk': self.object.question.pk})
