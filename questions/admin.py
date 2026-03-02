@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Question
+from .models import Question, Answer
 
 
 @admin.register(Question)
@@ -21,3 +21,11 @@ class QuestionAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+
+@admin.register(Answer)
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ('question', 'votes', 'created_at')
+    list_filter = ['question']
+    search_fields = ['text']
+    readonly_fields = ['created_at', 'updated_at']

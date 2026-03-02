@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Question(models.Model):
@@ -14,6 +15,7 @@ class Question(models.Model):
         ('hard', 'Hard'),
     ]
 
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
     text = models.TextField(verbose_name='Question Text')
     question_type = models.CharField(
         max_length=20,
@@ -32,8 +34,20 @@ class Question(models.Model):
         verbose_name='Tags',
         help_text='Comma-separated keywords, e.g. math, algebra',
     )
+    correct_answer = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Correct Answer',
+        help_text='Only for Short Answer type questions'
+    )
     views = models.PositiveIntegerField(default=0, verbose_name='Views')
     likes = models.PositiveIntegerField(default=0, verbose_name='Likes')
+    liked_by = models.ManyToManyField(User, related_name='liked_questions', blank=True)
+    upvotes = models.PositiveIntegerField(default=0, verbose_name='Upvotes')
+    downvotes = models.PositiveIntegerField(default=0, verbose_name='Downvotes')
+    votes = models.IntegerField(default=0, verbose_name='Net Votes')
+    upvoted_by = models.ManyToManyField(User, related_name='upvoted_questions', blank=True)
+    downvoted_by = models.ManyToManyField(User, related_name='downvoted_questions', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -62,3 +76,47 @@ class Choice(models.Model):
 
     def __str__(self):
         return f"{self.question.text[:20]} - {self.text}"
+class Answer(models.Model):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name='answers',
+        verbose_name='Question'
+    )
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='answers')
+    text = models.TextField(verbose_name='Answer Text')
+    upvotes = models.PositiveIntegerField(default=0, verbose_name='Upvotes')
+    downvotes = models.PositiveIntegerField(default=0, verbose_name='Downvotes')
+    votes = models.IntegerField(default=0, verbose_name='Net Votes')
+    upvoted_by = models.ManyToManyField(User, related_name='upvoted_answers', blank=True)
+    downvoted_by = models.ManyToManyField(User, related_name='downvoted_answers', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-votes', '-created_at']
+        verbose_name = 'Answer'
+        verbose_name_plural = 'Answers'
+
+    def __str__(self):
+        return f"Answer to: {self.question.text[:40]}..."
+
+
+class Comment(models.Model):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Question'
+    )
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='comments')
+    text = models.TextField(verbose_name='Comment Text')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
+
+    def __str__(self):
+        return f"Comment on: {self.question.text[:40]}..."

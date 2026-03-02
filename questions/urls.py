@@ -10,4 +10,12 @@ urlpatterns = [
     path('<int:pk>/delete/', views.QuestionDeleteView.as_view(), name='delete'),
     path('<int:pk>/', views.QuestionDetailView.as_view(), name='detail'),
     path('<int:pk>/like/', views.like_question, name='like'),
+    path('<int:pk>/upvote/', views.upvote_question, name='upvote_question'),
+    path('<int:pk>/downvote/', views.downvote_question, name='downvote_question'),
+    path('<int:pk>/answer/', views.create_answer, name='create_answer'),
+    path('<int:pk>/comment/', views.create_comment, name='create_comment'),
+    path('answer/<int:pk>/upvote/', views.upvote_answer, name='upvote_answer'),
+    path('answer/<int:pk>/downvote/', views.downvote_answer, name='downvote_answer'),
+    path('answer/<int:pk>/edit/', views.AnswerUpdateView.as_view(), name='answer_edit'),
+    path('answer/<int:pk>/delete/', views.AnswerDeleteView.as_view(), name='answer_delete'),
 ]
