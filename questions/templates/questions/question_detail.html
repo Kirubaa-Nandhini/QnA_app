@@ -1,0 +1,136 @@
+{% extends "questions/base.html" %}
+{% block title %}{{ question.text|truncatechars:60 }} — QnA App{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm text-gray-500">
+        <a href="{% url 'questions:list' %}" class="hover:text-indigo-400 transition">Questions</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-400">Detail</span>
+    </nav>
+
+    <article class="bg-gray-900 border border-gray-800 rounded-2xl p-8">
+        <!-- Type + Difficulty badges -->
+        <div class="flex items-center gap-2 mb-5">
+            <span class="text-xs font-semibold px-3 py-1 rounded-full
+        {% if question.question_type == 'multiple_choice' %}bg-blue-900/60 text-blue-300
+        {% elif question.question_type == 'true_false' %}bg-purple-900/60 text-purple-300
+        {% else %}bg-teal-900/60 text-teal-300{% endif %}">
+                {{ question.get_question_type_display }}
+            </span>
+            <span class="text-xs font-semibold px-3 py-1 rounded-full
+        {% if question.difficulty == 'easy' %}bg-green-900/60 text-green-300
+        {% elif question.difficulty == 'medium' %}bg-yellow-900/60 text-yellow-300
+        {% else %}bg-red-900/60 text-red-300{% endif %}">
+                {{ question.get_difficulty_display }}
+            </span>
+        </div>
+
+        <!-- Question text -->
+        <h1 class="text-2xl font-bold text-white leading-snug mb-5">{{ question.text }}</h1>
+
+        <!-- Views and Likes badges (below question text as per spec) -->
+        <div class="flex items-center gap-5 mb-6 pb-6 border-b border-gray-800">
+            <!-- Views badge -->
+            <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
+                <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+               -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span class="font-semibold text-white">{{ question.views }}</span>
+                <span class="text-gray-400 text-sm">views</span>
+            </div>
+
+            <!-- Likes badge + Like button -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2">
+                    <svg class="w-5 h-5 text-rose-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42
+              4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3
+              16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55
+              11.54L12 21.35z" />
+                    </svg>
+                    <span class="font-semibold text-white">{{ question.likes }}</span>
+                    <span class="text-gray-400 text-sm">likes</span>
+                </div>
+                <form method="POST" action="{% url 'questions:like' question.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" id="like-btn-{{ question.pk }}" class="flex items-center gap-2 border font-semibold px-4 py-2 rounded-xl transition
+                        {% if is_liked %}
+                            bg-rose-500 text-white border-rose-500 hover:bg-rose-600
+                        {% else %}
+                            bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20 hover:text-rose-300
+                        {% endif %}">
+                        <svg class="w-4 h-4" fill="{% if is_liked %}currentColor{% else %}none{% endif %}"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        {% if is_liked %}Liked{% else %}Like{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% if question.question_type == 'multiple_choice' or question.question_type == 'true_false' %}
+        <div class="mt-4 mb-8">
+            <div class="space-y-3">
+                {% for choice in question.choices.all %}
+                <div
+                    class="flex items-center gap-3 bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 transition-colors duration-300">
+                    <span
+                        class="w-8 h-8 flex items-center justify-center bg-brand/20 text-brand rounded-full text-xs font-bold shrink-0">
+                        {{ forloop.counter }}
+                    </span>
+                    <span class="text-gray-200">{{ choice.text }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tags -->
+        {% if question.tags %}
+        <div class="flex flex-wrap gap-2 mb-6">
+            {% for tag in question.tag_list %}<span
+                class="text-sm bg-gray-800 text-indigo-300 border border-indigo-500/20 px-3 py-1 rounded-full">#{{tag}}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Meta -->
+        <p class="text-xs text-gray-600">
+            Asked {{ question.created_at|date:"F j, Y" }}{% if question.updated_at != question.created_at %} &middot;
+            Updated {{ question.updated_at|date:"F j, Y" }}{% endif %}
+        </p>
+    </article>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-3 mt-6">
+        <a href="{% url 'questions:edit' question.pk %}"
+            class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white font-semibold px-5 py-2.5 rounded-xl transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5
+             m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit
+        </a>
+        <a href="{% url 'questions:delete' question.pk %}"
+            class="flex items-center gap-2 bg-red-900/20 hover:bg-red-900/40 border border-red-700/30 text-red-400 hover:text-red-300 font-semibold px-5 py-2.5 rounded-xl transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5
+             7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+        </a>
+        <a href="{% url 'questions:list' %}" class="ml-auto text-gray-500 hover:text-gray-300 text-sm transition">
+            ← Back to list
+        </a>
+    </div>
+
+</div>
+{% endblock %}
