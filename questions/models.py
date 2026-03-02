@@ -42,6 +42,12 @@ class Question(models.Model):
     )
     views = models.PositiveIntegerField(default=0, verbose_name='Views')
     likes = models.PositiveIntegerField(default=0, verbose_name='Likes')
+    liked_by = models.ManyToManyField(User, related_name='liked_questions', blank=True)
+    upvotes = models.PositiveIntegerField(default=0, verbose_name='Upvotes')
+    downvotes = models.PositiveIntegerField(default=0, verbose_name='Downvotes')
+    votes = models.IntegerField(default=0, verbose_name='Net Votes')
+    upvoted_by = models.ManyToManyField(User, related_name='upvoted_questions', blank=True)
+    downvoted_by = models.ManyToManyField(User, related_name='downvoted_questions', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -82,6 +88,8 @@ class Answer(models.Model):
     upvotes = models.PositiveIntegerField(default=0, verbose_name='Upvotes')
     downvotes = models.PositiveIntegerField(default=0, verbose_name='Downvotes')
     votes = models.IntegerField(default=0, verbose_name='Net Votes')
+    upvoted_by = models.ManyToManyField(User, related_name='upvoted_answers', blank=True)
+    downvoted_by = models.ManyToManyField(User, related_name='downvoted_answers', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
